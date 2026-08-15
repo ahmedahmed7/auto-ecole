@@ -40,11 +40,11 @@ export default function PaymentsPage() {
             <label>Candidat</label>
             <select required value={form.student_id} onChange={set('student_id')}>
               <option value="">Sélectionner un candidat…</option>
-              {students.map((s) => <option key={s.ID} value={s.ID}>{s.Name}</option>)}
+              {students.map((s) => <option key={s.ID} value={s.ID}>{s.User.Name} {s.LastName}</option>)}
             </select>
           </div>
           <div className="field">
-            <label>Montant (€)</label>
+            <label>Montant</label>
             <input
               required
               type="number"

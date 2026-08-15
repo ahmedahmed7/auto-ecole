@@ -3,7 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 
 export default function SignupPage({ onSwitch }) {
   const { signup, loading, error } = useAuth();
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
+  const [form, setForm] = useState({ name: '', email: '',lastName:'', password: '', confirm: '' });
   const [localError, setLocalError] = useState('');
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -16,7 +16,7 @@ export default function SignupPage({ onSwitch }) {
       return;
     }
     try {
-      await signup({ name: form.name, email: form.email, password: form.password }).unwrap();
+      await signup({ name: form.name,lastName:form.lastName, email: form.email, password: form.password }).unwrap();
     } catch (err) {
       setLocalError(err.message ?? 'Erreur lors de la création du compte');
     }
@@ -34,8 +34,12 @@ export default function SignupPage({ onSwitch }) {
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="field">
-            <label>Nom complet</label>
-            <input required value={form.name} onChange={set('name')} placeholder="Jean Dupont" />
+            <label>Nom</label>
+            <input required value={form.lastName} onChange={set('lastName')} placeholder="" />
+          </div>
+          <div className="field">
+            <label>Prénom</label>
+            <input required value={form.name} onChange={set('name')} placeholder="" />
           </div>
           <div className="field">
             <label>Adresse e-mail</label>

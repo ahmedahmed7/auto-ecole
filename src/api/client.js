@@ -1,6 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL ?? '';
-
-const getToken = () => localStorage.getItem('token');
+const BASE = import.meta.env.VITE_API_URL ?? 'localhost:8080';const getToken = () => localStorage.getItem('token');
 
 const request = async (path, options = {}) => {
   const token = getToken();
