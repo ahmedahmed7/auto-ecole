@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchInstructors, createInstructor, deleteInstructor } from '../store/slices/instructorsSlice';
+import { fetchInstructors, createInstructor, promoteToInstructor, deleteInstructor } from '../store/slices/instructorsSlice';
 
 export function useInstructors() {
   const dispatch = useDispatch();
@@ -15,6 +15,8 @@ export function useInstructors() {
     loading: status === 'loading',
     error,
     create: (data) => dispatch(createInstructor(data)),
+    promote: (data) => dispatch(promoteToInstructor(data)),
     remove: (id)   => dispatch(deleteInstructor(id)),
+    refresh: ()    => dispatch(fetchInstructors()),
   };
 }

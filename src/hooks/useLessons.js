@@ -16,5 +16,6 @@ export function useLessons() {
     error,
     schedule: (data) => dispatch(scheduleLesson(data)),
     cancel:   (id)   => dispatch(cancelLesson(id)),
+    refresh:  ()     => dispatch(fetchLessons()),
   };
 }

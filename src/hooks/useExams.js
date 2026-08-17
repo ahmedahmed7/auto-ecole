@@ -15,5 +15,6 @@ export function useExams() {
     loading: status === 'loading',
     error,
     record: (data) => dispatch(recordExam(data)),
+    refresh: () => dispatch(fetchExams()),
   };
 }

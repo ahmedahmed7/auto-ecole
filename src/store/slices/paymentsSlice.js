@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { api } from '../../api/client';
 
-export const fetchPayments = createAsyncThunk('payments/fetchAll', (studentId = '') =>
-  api.get(studentId ? `/payments?student_id=${studentId}` : '/payments')
+export const fetchPayments = createAsyncThunk('payments/fetchAll', (candidatId = '') =>
+  api.get(candidatId ? `/payments?candidat_id=${candidatId}` : '/payments')
 );
 export const recordPayment = createAsyncThunk('payments/record', (data) =>
   api.post('/payments', data)

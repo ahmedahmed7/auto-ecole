@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useVehicules } from '../hooks/useVehicules';
 
+const emptyForm = {
+  immatriculation: '',
+  type: '',
+  categorie: '',
+  nb_klm: '',
+  feuille_de_route: '',
+  date_visite_technique: '',
+  date_assurance: '',
+  date_mise_en_circulation: '',
+};
+
 export default function VehiculesPage() {
   const { vehicules, loading, error, create, remove } = useVehicules();
-  const [form, setForm] = useState({
-    car_number: '',
-    type: 'voiture',
-    model: '',
-    klm: '',
-    insurance_validity: '',
-    road_paper: '',
-    date_of_circulation: '',
-  });
+  const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState('');
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -22,18 +25,13 @@ export default function VehiculesPage() {
     try {
       await create({
         ...form,
-        klm: Number(form.klm),
-        insurance_validity:   form.insurance_validity   ? new Date(form.insurance_validity).toISOString()   : '',
-        road_paper:           form.road_paper           ? new Date(form.road_paper).toISOString()           : '',
-        date_of_circulation:  form.date_of_circulation  ? new Date(form.date_of_circulation).toISOString()  : '',
+        nb_klm: Number(form.nb_klm),
       }).unwrap();
-      setForm({ car_number: '', type: 'voiture', model: '', klm: '', insurance_validity: '', road_paper: '', date_of_circulation: '' });
+      setForm(emptyForm);
     } catch (err) {
       setFormError(err.message ?? 'Erreur lors de l\'ajout');
     }
   };
-
-  const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
 
   return (
     <div className="page">
@@ -44,34 +42,35 @@ export default function VehiculesPage() {
         <div className="form-row">
           <div className="field">
             <label>Immatriculation</label>
-            <input required value={form.car_number} onChange={set('car_number')} placeholder="AB-123-CD" />
+            <input required value={form.immatriculation} onChange={set('immatriculation')} placeholder="AB-123-CD" />
           </div>
           <div className="field">
             <label>Type</label>
-            <select value={form.type} onChange={set('type')}>
-              <option value="voiture">Voiture</option>
-              <option value="moto">Moto</option>
-            </select>
+            <input required value={form.type} onChange={set('type')} placeholder="Voiture" />
           </div>
           <div className="field">
-            <label>Modèle</label>
-            <input required value={form.model} onChange={set('model')} placeholder="Renault Clio" />
+            <label>Catégorie</label>
+            <input required value={form.categorie} onChange={set('categorie')} placeholder="B" />
           </div>
           <div className="field">
             <label>Kilométrage</label>
-            <input type="number" min={0} value={form.klm} onChange={set('klm')} placeholder="0" />
+            <input type="number" min={0} value={form.nb_klm} onChange={set('nb_klm')} placeholder="0" />
           </div>
           <div className="field">
-            <label>Assurance valide jusqu'au</label>
-            <input type="date" value={form.insurance_validity} onChange={set('insurance_validity')} />
+            <label>Feuille de route</label>
+            <input type="date" required value={form.feuille_de_route} onChange={set('feuille_de_route')} />
           </div>
           <div className="field">
             <label>Contrôle technique</label>
-            <input type="date" value={form.road_paper} onChange={set('road_paper')} />
+            <input type="date" required value={form.date_visite_technique} onChange={set('date_visite_technique')} />
           </div>
           <div className="field">
-            <label>1ère mise en circulation</label>
-            <input type="date" value={form.date_of_circulation} onChange={set('date_of_circulation')} />
+            <label>Assurance</label>
+            <input type="date" required value={form.date_assurance} onChange={set('date_assurance')} />
+          </div>
+          <div className="field">
+            <label>Mise en circulation</label>
+            <input type="date" required value={form.date_mise_en_circulation} onChange={set('date_mise_en_circulation')} />
           </div>
         </div>
         {formError && <p className="error">{formError}</p>}
@@ -79,7 +78,7 @@ export default function VehiculesPage() {
       </form>
 
       {loading && <p className="loading">Chargement…</p>}
-      {error   && <p className="error">{error}</p>}
+      {error && <p className="error">{error}</p>}
 
       <div className="card">
         <table>
@@ -87,31 +86,33 @@ export default function VehiculesPage() {
             <tr>
               <th>Immatriculation</th>
               <th>Type</th>
-              <th>Modèle</th>
+              <th>Catégorie</th>
               <th>Km</th>
-              <th>Assurance</th>
+              <th>Feuille</th>
               <th>CT</th>
+              <th>Assurance</th>
               <th>Mise en circ.</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {vehicules.map((v) => (
-              <tr key={v.ID}>
-                <td data-label="Immatriculation">{v.CarNumber}</td>
-                <td data-label="Type"><span className={`badge badge-${v.Type}`}>{v.Type}</span></td>
-                <td data-label="Modèle">{v.Model}</td>
-                <td data-label="Km">{v.Klm.toLocaleString()}</td>
-                <td data-label="Assurance">{fmtDate(v.InsuranceValidity)}</td>
-                <td data-label="CT">{fmtDate(v.RoadPaper)}</td>
-                <td data-label="Mise en circ.">{fmtDate(v.DateOfCirculation)}</td>
+              <tr key={v.id}>
+                <td data-label="Immatriculation">{v.immatriculation}</td>
+                <td data-label="Type">{v.type}</td>
+                <td data-label="Catégorie">{v.categorie}</td>
+                <td data-label="Km">{Number(v.nb_klm).toLocaleString('fr-FR')}</td>
+                <td data-label="Feuille">{v.feuille_de_route ? new Date(`${v.feuille_de_route}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</td>
+                <td data-label="CT">{v.date_visite_technique ? new Date(`${v.date_visite_technique}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</td>
+                <td data-label="Assurance">{v.date_assurance ? new Date(`${v.date_assurance}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</td>
+                <td data-label="Mise en circ.">{v.date_mise_en_circulation ? new Date(`${v.date_mise_en_circulation}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</td>
                 <td>
-                  <button className="btn-danger" onClick={() => remove(v.ID)}>Supprimer</button>
+                  <button type="button" className="btn-danger" onClick={() => remove(v.id)}>Supprimer</button>
                 </td>
               </tr>
             ))}
             {!loading && vehicules.length === 0 && (
-              <tr><td colSpan={8} className="empty">Aucun véhicule enregistré</td></tr>
+              <tr><td colSpan={9} className="empty">Aucun véhicule enregistré</td></tr>
             )}
           </tbody>
         </table>

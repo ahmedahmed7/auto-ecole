@@ -47,7 +47,7 @@ export default function LoginPage({ onSwitch }) {
 
         <p className="auth-switch">
           Pas encore de compte ?{' '}
-          <button className="auth-link" onClick={onSwitch}>Créer un compte</button>
+          <button type="button" className="auth-link" onClick={onSwitch}>Créer un compte</button>
         </p>
       </div>
     </div>

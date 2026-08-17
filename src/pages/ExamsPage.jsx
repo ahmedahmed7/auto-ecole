@@ -1,29 +1,63 @@
 import { useState } from 'react';
-import { useExams }    from '../hooks/useExams';
+import { useExams } from '../hooks/useExams';
 import { useStudents } from '../hooks/useStudents';
+import { useVehicules } from '../hooks/useVehicules';
+
+const emptyForm = {
+  candidat_id: '',
+  nature: '',
+  categorie: '',
+  date_examen: '',
+  centre: '',
+  convocation: '',
+  numero_liste: '',
+  etat: 'en_attente',
+  vehicule_id: '',
+};
+
+const etatOptions = [
+  { value: 'en_attente', label: 'En attente' },
+  { value: 'reussi', label: 'Réussi' },
+  { value: 'echoue', label: 'Échoué' },
+  { value: 'reporte', label: 'Reporté' },
+  { value: 'absent', label: 'Absent' },
+];
+
+const formatEtat = (etat) =>
+  etatOptions.find((option) => option.value === etat)?.label ??
+  etat.replaceAll('_', ' ');
 
 export default function ExamsPage() {
-  const { exams, loading, error, record } = useExams();
+  const { exams, loading, error, record, refresh } = useExams();
   const { students } = useStudents();
+  const { vehicules } = useVehicules();
 
-  const [form, setForm] = useState({ student_id: '', type: 'code', score: 0 });
+  const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState('');
 
-  const set = (key) => (e) =>
-    setForm((f) => ({ ...f, [key]: key === 'score' ? Number(e.target.value) : e.target.value }));
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
     try {
-      await record(form).unwrap();
-      setForm({ student_id: '', type: 'code', score: 0 });
+      await record({
+        ...form,
+        vehicule_id: form.vehicule_id,
+      }).unwrap();
+      await refresh().unwrap();
+      setForm(emptyForm);
     } catch (err) {
-      setFormError(err.message ?? 'Failed to record exam');
+      setFormError(err.message ?? 'Erreur lors de l\'enregistrement de l\'examen');
     }
   };
 
-  const studentName = (id) => students.find((s) => s.ID === id)?.Name ?? id;
+  const studentName = (id) => {
+    const s = students.find((item) => item.id === id);
+    return s ? `${s.prenom} ${s.nom}` : id;
+  };
+
+  const vehicleLabel = (id) => vehicules.find((v) => v.id === id)?.immatriculation ?? id;
 
   return (
     <div className="page">
@@ -34,21 +68,49 @@ export default function ExamsPage() {
         <div className="form-row">
           <div className="field">
             <label>Candidat</label>
-            <select required value={form.student_id} onChange={set('student_id')}>
+            <select required value={form.candidat_id} onChange={set('candidat_id')}>
               <option value="">Sélectionner un candidat…</option>
-              {students.map((s) => <option key={s.ID} value={s.ID}>{s.Name}</option>)}
+              {students.map((s) => <option key={s.id} value={s.id}>{s.prenom} {s.nom}</option>)}
             </select>
           </div>
           <div className="field">
-            <label>Type</label>
-            <select value={form.type} onChange={set('type')}>
-              <option value="code">Code</option>
-              <option value="conduite">Conduite</option>
+            <label>Nature</label>
+            <input required value={form.nature} onChange={set('nature')} />
+          </div>
+          <div className="field">
+            <label>Catégorie</label>
+            <input required value={form.categorie} onChange={set('categorie')} />
+          </div>
+          <div className="field">
+            <label>Date d'examen</label>
+            <input type="date" required value={form.date_examen} onChange={set('date_examen')} />
+          </div>
+          <div className="field">
+            <label>Centre</label>
+            <input required value={form.centre} onChange={set('centre')} />
+          </div>
+          <div className="field">
+            <label>Convocation</label>
+            <input required value={form.convocation} onChange={set('convocation')} />
+          </div>
+          <div className="field">
+            <label>Numéro de liste</label>
+            <input required value={form.numero_liste} onChange={set('numero_liste')} />
+          </div>
+          <div className="field">
+            <label>État</label>
+            <select value={form.etat} onChange={set('etat')}>
+              {etatOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
             </select>
           </div>
           <div className="field">
-            <label>Score (0–100)</label>
-            <input type="number" min={0} max={100} value={form.score} onChange={set('score')} />
+            <label>Véhicule</label>
+            <select value={form.vehicule_id} onChange={set('vehicule_id')}>
+              <option value="">Aucun</option>
+              {vehicules.map((v) => <option key={v.id} value={v.id}>{v.immatriculation}</option>)}
+            </select>
           </div>
         </div>
         {formError && <p className="error">{formError}</p>}
@@ -61,24 +123,22 @@ export default function ExamsPage() {
       <div className="card">
         <table>
           <thead>
-            <tr><th>Candidat</th><th>Type</th><th>Score</th><th>Résultat</th><th>Date</th></tr>
+            <tr><th>Candidat</th><th>Nature</th><th>Catégorie</th><th>Date</th><th>Centre</th><th>État</th><th>Véhicule</th></tr>
           </thead>
           <tbody>
             {exams.map((e) => (
-              <tr key={e.ID}>
-                <td data-label="Candidat">{studentName(e.StudentID)}</td>
-                <td data-label="Type"><span className={`badge badge-${e.Type}`}>{e.Type}</span></td>
-                <td data-label="Score">{e.Score}</td>
-                <td data-label="Résultat">
-                  <span className={`badge ${e.Passed ? 'badge-success' : 'badge-fail'}`}>
-                    {e.Passed ? 'Reçu' : 'Échoué'}
-                  </span>
-                </td>
-                <td data-label="Date">{new Date(e.TakenAt).toLocaleDateString('fr-FR')}</td>
+              <tr key={e.id}>
+                <td data-label="Candidat">{studentName(e.candidat_id)}</td>
+                <td data-label="Nature">{e.nature}</td>
+                <td data-label="Catégorie">{e.categorie}</td>
+                <td data-label="Date">{e.date_examen ? new Date(`${e.date_examen}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</td>
+                <td data-label="Centre">{e.centre}</td>
+                <td data-label="État"><span className="badge badge-info">{formatEtat(e.etat)}</span></td>
+                <td data-label="Véhicule">{e.vehicule_id ? vehicleLabel(e.vehicule_id) : '—'}</td>
               </tr>
             ))}
             {!loading && exams.length === 0 && (
-              <tr><td colSpan={5} className="empty">Aucun examen enregistré</td></tr>
+              <tr><td colSpan={7} className="empty">Aucun examen enregistré</td></tr>
             )}
           </tbody>
         </table>

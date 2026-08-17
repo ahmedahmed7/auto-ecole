@@ -22,7 +22,7 @@ const vehiculesSlice = createSlice({
       .addCase(fetchVehicules.fulfilled, (state, action) => { state.status = 'success'; state.items = action.payload ?? []; })
       .addCase(fetchVehicules.rejected,  (state, action) => { state.status = 'failed';  state.error = action.error.message; })
       .addCase(createVehicule.fulfilled, (state, action) => { state.items.push(action.payload); })
-      .addCase(deleteVehicule.fulfilled, (state, action) => { state.items = state.items.filter((v) => v.ID !== action.payload); });
+      .addCase(deleteVehicule.fulfilled, (state, action) => { state.items = state.items.filter((v) => v.id !== action.payload); });
   },
 });
 

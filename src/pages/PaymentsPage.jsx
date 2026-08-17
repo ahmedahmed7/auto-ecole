@@ -2,11 +2,17 @@ import { useState } from 'react';
 import { usePayments } from '../hooks/usePayments';
 import { useStudents } from '../hooks/useStudents';
 
+const emptyForm = {
+  candidat_id: '',
+  montant: '',
+  date_paiement: '',
+};
+
 export default function PaymentsPage() {
   const { payments, loading, error, record } = usePayments();
   const { students } = useStudents();
 
-  const [form, setForm] = useState({ student_id: '', amount_euros: '', description: '' });
+  const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState('');
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -14,20 +20,27 @@ export default function PaymentsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
-    const amount_cents = Math.round(parseFloat(form.amount_euros) * 100);
-    if (isNaN(amount_cents) || amount_cents <= 0) {
-      setFormError('Amount must be a positive number');
+    const montant = Number.parseFloat(form.montant);
+    if (!Number.isFinite(montant) || montant <= 0) {
+      setFormError('Le montant doit être un nombre positif');
       return;
     }
     try {
-      await record({ student_id: form.student_id, amount_cents, description: form.description }).unwrap();
-      setForm({ student_id: '', amount_euros: '', description: '' });
+      await record({
+        candidat_id: form.candidat_id,
+        montant,
+        date_paiement: form.date_paiement,
+      }).unwrap();
+      setForm(emptyForm);
     } catch (err) {
-      setFormError(err.message ?? 'Failed to record payment');
+      setFormError(err.message ?? 'Erreur lors de l\'enregistrement du paiement');
     }
   };
 
-  const studentName = (id) => students.find((s) => s.ID === id)?.Name ?? id;
+  const studentName = (id) => {
+    const s = students.find((item) => item.id === id);
+    return s ? `${s.prenom} ${s.nom}` : id;
+  };
 
   return (
     <div className="page">
@@ -38,9 +51,9 @@ export default function PaymentsPage() {
         <div className="form-row">
           <div className="field">
             <label>Candidat</label>
-            <select required value={form.student_id} onChange={set('student_id')}>
+            <select required value={form.candidat_id} onChange={set('candidat_id')}>
               <option value="">Sélectionner un candidat…</option>
-              {students.map((s) => <option key={s.ID} value={s.ID}>{s.User.Name} {s.LastName}</option>)}
+              {students.map((s) => <option key={s.id} value={s.id}>{s.prenom} {s.nom}</option>)}
             </select>
           </div>
           <div className="field">
@@ -50,14 +63,14 @@ export default function PaymentsPage() {
               type="number"
               min="0.01"
               step="0.01"
-              value={form.amount_euros}
-              onChange={set('amount_euros')}
+              value={form.montant}
+              onChange={set('montant')}
               placeholder="0.00"
             />
           </div>
           <div className="field">
-            <label>Description</label>
-            <input value={form.description} onChange={set('description')} placeholder="Note optionnelle…" />
+            <label>Date de paiement</label>
+            <input type="date" required value={form.date_paiement} onChange={set('date_paiement')} />
           </div>
         </div>
         {formError && <p className="error">{formError}</p>}
@@ -70,19 +83,18 @@ export default function PaymentsPage() {
       <div className="card">
         <table>
           <thead>
-            <tr><th>Candidat</th><th>Montant</th><th>Description</th><th>Payé le</th></tr>
+            <tr><th>Candidat</th><th>Montant</th><th>Date</th></tr>
           </thead>
           <tbody>
             {payments.map((p) => (
-              <tr key={p.ID}>
-                <td data-label="Candidat">{studentName(p.StudentID)}</td>
-                <td data-label="Montant">€{(p.AmountCents / 100).toFixed(2)}</td>
-                <td data-label="Description">{p.Description || '—'}</td>
-                <td data-label="Payé le">{new Date(p.PaidAt).toLocaleDateString('fr-FR')}</td>
+              <tr key={p.id}>
+                <td data-label="Candidat">{studentName(p.candidat_id)}</td>
+                <td data-label="Montant">€{Number(p.montant).toFixed(2)}</td>
+                <td data-label="Date">{p.date_paiement ? new Date(`${p.date_paiement}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</td>
               </tr>
             ))}
             {!loading && payments.length === 0 && (
-              <tr><td colSpan={4} className="empty">Aucun paiement enregistré</td></tr>
+              <tr><td colSpan={3} className="empty">Aucun paiement enregistré</td></tr>
             )}
           </tbody>
         </table>

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchStudents, createStudent, deleteStudent } from '../store/slices/studentsSlice';
+import { fetchStudents, createStudent, updateStudent, deleteStudent } from '../store/slices/studentsSlice';
 
 export function useStudents() {
   const dispatch = useDispatch();
@@ -15,6 +15,8 @@ export function useStudents() {
     loading: status === 'loading',
     error,
     create: (data) => dispatch(createStudent(data)),
+    update: (id, data) => dispatch(updateStudent({ id, data })),
     remove: (id)   => dispatch(deleteStudent(id)),
+    refresh: ()    => dispatch(fetchStudents()),
   };
 }

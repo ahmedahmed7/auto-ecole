@@ -56,7 +56,7 @@ export default function App() {
           ))}
         </nav>
         <div className="user-bar">
-          <span className="user-name">👤 {user?.name}</span>
+          <span className="user-name">👤 {user ? `${user.prenom ?? user.name ?? ''} ${user.nom ?? user.lastName ?? ''}`.trim() : ''}</span>
           <button className="logout-btn" onClick={logout}>Déconnexion</button>
         </div>
       </header>

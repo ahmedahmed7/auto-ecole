@@ -3,10 +3,19 @@ import { useAuth } from '../hooks/useAuth';
 
 export default function SignupPage({ onSwitch }) {
   const { signup, loading, error } = useAuth();
-  const [form, setForm] = useState({ name: '', email: '',lastName:'', password: '', confirm: '' });
+  const [form, setForm] = useState({
+    nom: '',
+    prenom: '',
+    cin: '',
+    email: '',
+    num_telephone: '',
+    date_de_naissance: '',
+    password: '',
+    confirm: '',
+  });
   const [localError, setLocalError] = useState('');
 
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,8 +24,18 @@ export default function SignupPage({ onSwitch }) {
       setLocalError('Les mots de passe ne correspondent pas');
       return;
     }
+
     try {
-      await signup({ name: form.name,lastName:form.lastName, email: form.email, password: form.password }).unwrap();
+      await signup({
+        nom: form.nom,
+        prenom: form.prenom,
+        cin: form.cin,
+        email: form.email,
+        num_telephone: form.num_telephone,
+        date_de_naissance: form.date_de_naissance,
+        date_naissance: form.date_de_naissance,
+        password: form.password,
+      }).unwrap();
     } catch (err) {
       setLocalError(err.message ?? 'Erreur lors de la création du compte');
     }
@@ -24,22 +43,38 @@ export default function SignupPage({ onSwitch }) {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
+      <div className="auth-card auth-card-wide">
         <div className="auth-logo">
           <span className="auth-logo-icon">🚗</span>
           <h1>Auto École</h1>
         </div>
         <h2>Créer un compte</h2>
-        <p className="auth-subtitle">Rejoignez-nous pour gérer vos cours.</p>
+        <p className="auth-subtitle">Rejoignez-nous pour gérer vos dossiers.</p>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <div className="field">
-            <label>Nom</label>
-            <input required value={form.lastName} onChange={set('lastName')} placeholder="" />
+          <div className="form-row">
+            <div className="field">
+              <label>Nom</label>
+              <input required value={form.nom} onChange={set('nom')} />
+            </div>
+            <div className="field">
+              <label>Prénom</label>
+              <input required value={form.prenom} onChange={set('prenom')} />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="field">
+              <label>CIN</label>
+              <input required value={form.cin} onChange={set('cin')} />
+            </div>
+            <div className="field">
+              <label>Téléphone</label>
+              <input required value={form.num_telephone} onChange={set('num_telephone')} />
+            </div>
           </div>
           <div className="field">
-            <label>Prénom</label>
-            <input required value={form.name} onChange={set('name')} placeholder="" />
+            <label>Date de naissance</label>
+            <input type="date" required value={form.date_de_naissance} onChange={set('date_de_naissance')} />
           </div>
           <div className="field">
             <label>Adresse e-mail</label>
@@ -63,7 +98,7 @@ export default function SignupPage({ onSwitch }) {
 
         <p className="auth-switch">
           Déjà un compte ?{' '}
-          <button className="auth-link" onClick={onSwitch}>Se connecter</button>
+          <button type="button" className="auth-link" onClick={onSwitch}>Se connecter</button>
         </p>
       </div>
     </div>
