@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { usePayments } from '../hooks/usePayments';
 import { useStudents } from '../hooks/useStudents';
+import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
 const emptyForm = {
   candidat_id: '',
@@ -74,30 +75,32 @@ export default function PaymentsPage() {
           </div>
         </div>
         {formError && <p className="error">{formError}</p>}
-        <button type="submit">Enregistrer</button>
+        <Button type="submit" variant="contained">Enregistrer</Button>
       </form>
 
       {loading && <p className="loading">Chargement…</p>}
       {error && <p className="error">{error}</p>}
 
       <div className="card">
-        <table>
-          <thead>
-            <tr><th>Candidat</th><th>Montant</th><th>Date</th></tr>
-          </thead>
-          <tbody>
+        <TableContainer className="table-wrap">
+          <Table size="small" sx={{ minWidth: 640 }}>
+            <TableHead>
+              <TableRow><TableCell>Candidat</TableCell><TableCell>Montant</TableCell><TableCell>Date</TableCell></TableRow>
+            </TableHead>
+            <TableBody>
             {payments.map((p) => (
-              <tr key={p.id}>
-                <td data-label="Candidat">{studentName(p.candidat_id)}</td>
-                <td data-label="Montant">€{Number(p.montant).toFixed(2)}</td>
-                <td data-label="Date">{p.date_paiement ? new Date(`${p.date_paiement}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</td>
-              </tr>
+              <TableRow key={p.id} hover>
+                <TableCell>{studentName(p.candidat_id)}</TableCell>
+                <TableCell>€{Number(p.montant).toFixed(2)}</TableCell>
+                <TableCell>{p.date_paiement ? new Date(`${p.date_paiement}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</TableCell>
+              </TableRow>
             ))}
             {!loading && payments.length === 0 && (
-              <tr><td colSpan={3} className="empty">Aucun paiement enregistré</td></tr>
+              <TableRow><TableCell colSpan={3} className="empty">Aucun paiement enregistré</TableCell></TableRow>
             )}
-          </tbody>
-        </table>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </div>
     </div>
   );

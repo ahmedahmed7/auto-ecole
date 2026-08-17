@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import { useStudents } from '../hooks/useStudents';
+import { Button, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@mui/material';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const emptyForm = {
   nom: '',
@@ -17,6 +21,7 @@ export default function StudentsPage() {
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const set = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: key === 'lunette' ? e.target.checked : e.target.value }));
@@ -40,6 +45,14 @@ export default function StudentsPage() {
     setEditingId(null);
     setForm(emptyForm);
     setFormError('');
+  };
+
+  const requestDelete = (student) => setPendingDelete(student);
+  const closeDeleteDialog = () => setPendingDelete(null);
+  const confirmDelete = () => {
+    if (!pendingDelete) return;
+    remove(pendingDelete.id);
+    closeDeleteDialog();
   };
 
   const handleSubmit = async (e) => {
@@ -107,11 +120,11 @@ export default function StudentsPage() {
         </div>
         {formError && <p className="error">{formError}</p>}
         <div className="actions-row">
-          <button type="submit">{editingId ? 'Mettre à jour' : 'Ajouter'}</button>
+          <Button type="submit" variant="contained">{editingId ? 'Mettre à jour' : 'Ajouter'}</Button>
           {editingId && (
-            <button type="button" className="btn-secondary" onClick={cancelEdit}>
+            <Button type="button" variant="outlined" onClick={cancelEdit}>
               Annuler
-            </button>
+            </Button>
           )}
         </div>
       </form>
@@ -120,45 +133,64 @@ export default function StudentsPage() {
       {error && <p className="error">{error}</p>}
 
       <div className="card">
-        <table>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Prénom</th>
-              <th>CIN</th>
-              <th>E-mail</th>
-              <th>Téléphone</th>
-              <th>Naissance</th>
-              <th>Lunette</th>
-              <th>Observation</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+        <TableContainer className="table-wrap">
+          <Table size="small" sx={{ minWidth: 980 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell>Nom</TableCell>
+                <TableCell>Prénom</TableCell>
+                <TableCell>CIN</TableCell>
+                <TableCell>E-mail</TableCell>
+                <TableCell>Téléphone</TableCell>
+                <TableCell>Naissance</TableCell>
+                <TableCell>Lunette</TableCell>
+                <TableCell>Observation</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
             {students.map((s) => (
-              <tr key={s.id}>
-                <td data-label="Nom">{s.nom}</td>
-                <td data-label="Prénom">{s.prenom}</td>
-                <td data-label="CIN">{s.cin}</td>
-                <td data-label="E-mail">{s.email || '—'}</td>
-                <td data-label="Téléphone">{s.num_telephone || '—'}</td>
-                <td data-label="Naissance">{s.date_de_naissance ? new Date(`${s.date_de_naissance}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</td>
-                <td data-label="Lunette">{s.lunette ? 'Oui' : 'Non'}</td>
-                <td data-label="Observation">{s.observation || '—'}</td>
-                <td>
+              <TableRow key={s.id} hover>
+                <TableCell>{s.nom}</TableCell>
+                <TableCell>{s.prenom}</TableCell>
+                <TableCell>{s.cin}</TableCell>
+                <TableCell>{s.email || '—'}</TableCell>
+                <TableCell>{s.num_telephone || '—'}</TableCell>
+                <TableCell>{s.date_de_naissance ? new Date(`${s.date_de_naissance}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</TableCell>
+                <TableCell>{s.lunette ? 'Oui' : 'Non'}</TableCell>
+                <TableCell>{s.observation || '—'}</TableCell>
+                <TableCell align="right">
                   <div className="row-actions">
-                    <button type="button" className="btn-secondary" onClick={() => startEdit(s)}>Modifier</button>
-                    <button type="button" className="btn-danger" onClick={() => remove(s.id)}>Supprimer</button>
+                    <Tooltip title="Modifier">
+                      <IconButton color="primary" size="small" onClick={() => startEdit(s)} aria-label="Modifier candidat">
+                        <EditOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Supprimer">
+                      <IconButton color="error" size="small" onClick={() => requestDelete(s)} aria-label="Supprimer candidat">
+                        <DeleteOutlineIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
             {!loading && students.length === 0 && (
-              <tr><td colSpan={9} className="empty">Aucun candidat enregistré</td></tr>
+              <TableRow><TableCell colSpan={9} className="empty">Aucun candidat enregistré</TableCell></TableRow>
             )}
-          </tbody>
-        </table>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title="Confirmer la suppression"
+        message={pendingDelete ? `Supprimer le candidat ${pendingDelete.prenom} ${pendingDelete.nom} ?` : ''}
+        confirmLabel="Supprimer"
+        onConfirm={confirmDelete}
+        onCancel={closeDeleteDialog}
+      />
     </div>
   );
 }

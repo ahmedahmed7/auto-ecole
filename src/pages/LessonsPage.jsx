@@ -2,6 +2,9 @@ import { useState } from 'react';
 import Calendar from '../components/Calendar';
 import { useLessons } from '../hooks/useLessons';
 import { useStudents } from '../hooks/useStudents';
+import { Button, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@mui/material';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const emptyForm = {
   candidat_id: '',
@@ -44,6 +47,7 @@ export default function LessonsPage() {
   const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState('');
   const [manualMode, setManualMode] = useState(false);
+  const [pendingCancel, setPendingCancel] = useState(null);
 
   const set = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: key === 'duration_mins' ? Number(e.target.value) : e.target.value }));
@@ -103,6 +107,14 @@ export default function LessonsPage() {
   const studentName = (id) => {
     const s = students.find((item) => item.id === id);
     return s ? `${s.prenom} ${s.nom}` : id;
+  };
+
+  const requestCancel = (lesson) => setPendingCancel(lesson);
+  const closeCancelDialog = () => setPendingCancel(null);
+  const confirmCancel = () => {
+    if (!pendingCancel) return;
+    cancel(pendingCancel.id);
+    closeCancelDialog();
   };
 
   return (
@@ -179,7 +191,7 @@ export default function LessonsPage() {
           </div>
 
           {formError && <p className="error">{formError}</p>}
-          <button type="submit">Planifier</button>
+          <Button type="submit" variant="contained">Planifier</Button>
         </form>
       </div>
 
@@ -187,26 +199,43 @@ export default function LessonsPage() {
       {error && <p className="error">{error}</p>}
 
       <div className="card">
-        <table>
-          <thead>
-            <tr><th>Candidat</th><th>Début</th><th>Fin</th><th>Lieu</th><th></th></tr>
-          </thead>
-          <tbody>
+        <TableContainer className="table-wrap">
+          <Table size="small" sx={{ minWidth: 760 }}>
+            <TableHead>
+              <TableRow><TableCell>Candidat</TableCell><TableCell>Début</TableCell><TableCell>Fin</TableCell><TableCell>Lieu</TableCell><TableCell align="right"></TableCell></TableRow>
+            </TableHead>
+            <TableBody>
             {lessons.map((l) => (
-              <tr key={l.id}>
-                <td data-label="Candidat">{studentName(l.candidat_id)}</td>
-                <td data-label="Début">{l.date_h_debut ? new Date(l.date_h_debut).toLocaleString('fr-FR') : '—'}</td>
-                <td data-label="Fin">{l.date_h_fin ? new Date(l.date_h_fin).toLocaleString('fr-FR') : '—'}</td>
-                <td data-label="Lieu">{l.lieu_rencontre}</td>
-                <td><button type="button" className="btn-danger" onClick={() => cancel(l.id)}>Annuler</button></td>
-              </tr>
+              <TableRow key={l.id} hover>
+                <TableCell>{studentName(l.candidat_id)}</TableCell>
+                <TableCell>{l.date_h_debut ? new Date(l.date_h_debut).toLocaleString('fr-FR') : '—'}</TableCell>
+                <TableCell>{l.date_h_fin ? new Date(l.date_h_fin).toLocaleString('fr-FR') : '—'}</TableCell>
+                <TableCell>{l.lieu_rencontre}</TableCell>
+                <TableCell align="right">
+                  <Tooltip title="Annuler">
+                    <IconButton color="error" size="small" onClick={() => requestCancel(l)} aria-label="Annuler leçon">
+                      <DeleteOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
             ))}
             {!loading && lessons.length === 0 && (
-              <tr><td colSpan={5} className="empty">Aucune leçon planifiée</td></tr>
+              <TableRow><TableCell colSpan={5} className="empty">Aucune leçon planifiée</TableCell></TableRow>
             )}
-          </tbody>
-        </table>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(pendingCancel)}
+        title="Confirmer l'annulation"
+        message={pendingCancel ? `Annuler la leçon de ${studentName(pendingCancel.candidat_id)} ?` : ''}
+        confirmLabel="Annuler la leçon"
+        onConfirm={confirmCancel}
+        onCancel={closeCancelDialog}
+      />
     </div>
   );
 }

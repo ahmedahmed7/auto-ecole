@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useExams } from '../hooks/useExams';
 import { useStudents } from '../hooks/useStudents';
 import { useVehicules } from '../hooks/useVehicules';
+import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
 const emptyForm = {
   candidat_id: '',
@@ -114,34 +115,36 @@ export default function ExamsPage() {
           </div>
         </div>
         {formError && <p className="error">{formError}</p>}
-        <button type="submit">Enregistrer</button>
+        <Button type="submit" variant="contained">Enregistrer</Button>
       </form>
 
       {loading && <p className="loading">Chargement…</p>}
       {error && <p className="error">{error}</p>}
 
       <div className="card">
-        <table>
-          <thead>
-            <tr><th>Candidat</th><th>Nature</th><th>Catégorie</th><th>Date</th><th>Centre</th><th>État</th><th>Véhicule</th></tr>
-          </thead>
-          <tbody>
+        <TableContainer className="table-wrap">
+          <Table size="small" sx={{ minWidth: 900 }}>
+            <TableHead>
+              <TableRow><TableCell>Candidat</TableCell><TableCell>Nature</TableCell><TableCell>Catégorie</TableCell><TableCell>Date</TableCell><TableCell>Centre</TableCell><TableCell>État</TableCell><TableCell>Véhicule</TableCell></TableRow>
+            </TableHead>
+            <TableBody>
             {exams.map((e) => (
-              <tr key={e.id}>
-                <td data-label="Candidat">{studentName(e.candidat_id)}</td>
-                <td data-label="Nature">{e.nature}</td>
-                <td data-label="Catégorie">{e.categorie}</td>
-                <td data-label="Date">{e.date_examen ? new Date(`${e.date_examen}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</td>
-                <td data-label="Centre">{e.centre}</td>
-                <td data-label="État"><span className="badge badge-info">{formatEtat(e.etat)}</span></td>
-                <td data-label="Véhicule">{e.vehicule_id ? vehicleLabel(e.vehicule_id) : '—'}</td>
-              </tr>
+              <TableRow key={e.id} hover>
+                <TableCell>{studentName(e.candidat_id)}</TableCell>
+                <TableCell>{e.nature}</TableCell>
+                <TableCell>{e.categorie}</TableCell>
+                <TableCell>{e.date_examen ? new Date(`${e.date_examen}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</TableCell>
+                <TableCell>{e.centre}</TableCell>
+                <TableCell><span className="badge badge-info">{formatEtat(e.etat)}</span></TableCell>
+                <TableCell>{e.vehicule_id ? vehicleLabel(e.vehicule_id) : '—'}</TableCell>
+              </TableRow>
             ))}
             {!loading && exams.length === 0 && (
-              <tr><td colSpan={7} className="empty">Aucun examen enregistré</td></tr>
+              <TableRow><TableCell colSpan={7} className="empty">Aucun examen enregistré</TableCell></TableRow>
             )}
-          </tbody>
-        </table>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </div>
     </div>
   );

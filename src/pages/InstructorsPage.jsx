@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useInstructors } from '../hooks/useInstructors';
 import { useAuth } from '../hooks/useAuth';
+import { Button, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@mui/material';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const emptyForm = {
   nom: '',
@@ -26,6 +29,7 @@ export default function InstructorsPage() {
   });
   const [promoteError, setPromoteError] = useState('');
   const [promoted, setPromoted] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -65,6 +69,13 @@ export default function InstructorsPage() {
 
   const setPromote = (key) => (e) => setPromoteForm((f) => ({ ...f, [key]: e.target.value }));
   const canPromote = !promoted && user?.role_type !== 'moniteur';
+  const requestDelete = (instructor) => setPendingDelete(instructor);
+  const closeDeleteDialog = () => setPendingDelete(null);
+  const confirmDelete = () => {
+    if (!pendingDelete) return;
+    remove(pendingDelete.id);
+    closeDeleteDialog();
+  };
 
   return (
     <div className="page">
@@ -88,7 +99,7 @@ export default function InstructorsPage() {
             </div>
           </div>
           {promoteError && <p className="error">{promoteError}</p>}
-          <button type="submit">Activer mon profil moniteur</button>
+          <Button type="submit" variant="contained">Activer mon profil moniteur</Button>
         </form>
       )}
 
@@ -133,49 +144,64 @@ export default function InstructorsPage() {
           </div>
         </div>
         {formError && <p className="error">{formError}</p>}
-        <button type="submit">Ajouter</button>
+        <Button type="submit" variant="contained">Ajouter</Button>
       </form>
 
       {loading && <p className="loading">Chargement…</p>}
       {error && <p className="error">{error}</p>}
 
       <div className="card">
-        <table>
-          <thead>
-            <tr>
-              <th>Nom</th>
-              <th>Prénom</th>
-              <th>CIN</th>
-              <th>E-mail</th>
-              <th>Téléphone</th>
-              <th>Spécialité</th>
-              <th>Permis</th>
-              <th>Liscence</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
+        <TableContainer className="table-wrap">
+          <Table size="small" sx={{ minWidth: 980 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell>Nom</TableCell>
+                <TableCell>Prénom</TableCell>
+                <TableCell>CIN</TableCell>
+                <TableCell>E-mail</TableCell>
+                <TableCell>Téléphone</TableCell>
+                <TableCell>Spécialité</TableCell>
+                <TableCell>Permis</TableCell>
+                <TableCell>Liscence</TableCell>
+                <TableCell align="right"></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
             {instructors.map((i) => (
-              <tr key={i.id}>
-                <td data-label="Nom">{i.nom}</td>
-                <td data-label="Prénom">{i.prenom}</td>
-                <td data-label="CIN">{i.cin}</td>
-                <td data-label="E-mail">{i.email || '—'}</td>
-                <td data-label="Téléphone">{i.num_telephone || '—'}</td>
-                <td data-label="Spécialité">{i.specialite}</td>
-                <td data-label="Permis">{i.date_validite_permis ? new Date(`${i.date_validite_permis}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</td>
-                <td data-label="Liscence">{i.date_validite_liscence ? new Date(`${i.date_validite_liscence}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</td>
-                <td>
-                  <button type="button" className="btn-danger" onClick={() => remove(i.id)}>Supprimer</button>
-                </td>
-              </tr>
+              <TableRow key={i.id} hover>
+                <TableCell>{i.nom}</TableCell>
+                <TableCell>{i.prenom}</TableCell>
+                <TableCell>{i.cin}</TableCell>
+                <TableCell>{i.email || '—'}</TableCell>
+                <TableCell>{i.num_telephone || '—'}</TableCell>
+                <TableCell>{i.specialite}</TableCell>
+                <TableCell>{i.date_validite_permis ? new Date(`${i.date_validite_permis}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</TableCell>
+                <TableCell>{i.date_validite_liscence ? new Date(`${i.date_validite_liscence}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</TableCell>
+                <TableCell align="right">
+                  <Tooltip title="Supprimer">
+                    <IconButton color="error" size="small" onClick={() => requestDelete(i)} aria-label="Supprimer moniteur">
+                      <DeleteOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
             ))}
             {!loading && instructors.length === 0 && (
-              <tr><td colSpan={9} className="empty">Aucun moniteur enregistré</td></tr>
+              <TableRow><TableCell colSpan={9} className="empty">Aucun moniteur enregistré</TableCell></TableRow>
             )}
-          </tbody>
-        </table>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title="Confirmer la suppression"
+        message={pendingDelete ? `Supprimer le moniteur ${pendingDelete.prenom} ${pendingDelete.nom} ?` : ''}
+        confirmLabel="Supprimer"
+        onConfirm={confirmDelete}
+        onCancel={closeDeleteDialog}
+      />
     </div>
   );
 }
