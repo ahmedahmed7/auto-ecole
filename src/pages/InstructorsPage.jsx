@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useInstructors } from '../hooks/useInstructors';
 import { useAuth } from '../hooks/useAuth';
-import { Button, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@mui/material';
+import { Button, Chip, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -69,6 +69,7 @@ export default function InstructorsPage() {
 
   const setPromote = (key) => (e) => setPromoteForm((f) => ({ ...f, [key]: e.target.value }));
   const canPromote = !promoted && user?.role_type !== 'moniteur';
+  const statusLabel = (status) => (status === 'inactive' ? 'Inactif' : 'Actif');
   const requestDelete = (instructor) => setPendingDelete(instructor);
   const closeDeleteDialog = () => setPendingDelete(null);
   const confirmDelete = () => {
@@ -161,6 +162,7 @@ export default function InstructorsPage() {
                 <TableCell>E-mail</TableCell>
                 <TableCell>Téléphone</TableCell>
                 <TableCell>Spécialité</TableCell>
+                <TableCell>Statut</TableCell>
                 <TableCell>Permis</TableCell>
                 <TableCell>Liscence</TableCell>
                 <TableCell align="right"></TableCell>
@@ -175,19 +177,29 @@ export default function InstructorsPage() {
                 <TableCell>{i.email || '—'}</TableCell>
                 <TableCell>{i.num_telephone || '—'}</TableCell>
                 <TableCell>{i.specialite}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={statusLabel(i.status)}
+                    color={i.status === 'inactive' ? 'default' : 'success'}
+                    size="small"
+                    variant={i.status === 'inactive' ? 'outlined' : 'filled'}
+                  />
+                </TableCell>
                 <TableCell>{i.date_validite_permis ? new Date(`${i.date_validite_permis}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</TableCell>
                 <TableCell>{i.date_validite_liscence ? new Date(`${i.date_validite_liscence}T00:00:00`).toLocaleDateString('fr-FR') : '—'}</TableCell>
                 <TableCell align="right">
                   <Tooltip title="Supprimer">
-                    <IconButton color="error" size="small" onClick={() => requestDelete(i)} aria-label="Supprimer moniteur">
+                    <span>
+                      <IconButton color="error" size="small" onClick={() => requestDelete(i)} aria-label="Supprimer moniteur" disabled={i.status === 'inactive'}>
                       <DeleteOutlineIcon fontSize="small" />
-                    </IconButton>
+                      </IconButton>
+                    </span>
                   </Tooltip>
                 </TableCell>
               </TableRow>
             ))}
             {!loading && instructors.length === 0 && (
-              <TableRow><TableCell colSpan={9} className="empty">Aucun moniteur enregistré</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="empty">Aucun moniteur enregistré</TableCell></TableRow>
             )}
             </TableBody>
           </Table>
@@ -196,9 +208,9 @@ export default function InstructorsPage() {
 
       <ConfirmDialog
         open={Boolean(pendingDelete)}
-        title="Confirmer la suppression"
-        message={pendingDelete ? `Supprimer le moniteur ${pendingDelete.prenom} ${pendingDelete.nom} ?` : ''}
-        confirmLabel="Supprimer"
+        title="Confirmer la désactivation"
+        message={pendingDelete ? `Désactiver le profil moniteur de ${pendingDelete.prenom} ${pendingDelete.nom} tout en conservant son compte utilisateur ?` : ''}
+        confirmLabel="Désactiver"
         onConfirm={confirmDelete}
         onCancel={closeDeleteDialog}
       />

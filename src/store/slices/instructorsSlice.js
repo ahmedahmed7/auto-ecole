@@ -15,6 +15,7 @@ const normalizeInstructor = (instructor) => {
     date_validite_permis: instructor?.date_validite_permis ?? instructor?.DateValiditePermis ?? '',
     date_validite_liscence: instructor?.date_validite_liscence ?? instructor?.DateValiditeLiscence ?? '',
     specialite: instructor?.specialite ?? instructor?.Specialite ?? '',
+    status: instructor?.status ?? instructor?.Status ?? 'active',
   };
 };
 
@@ -50,7 +51,13 @@ const instructorsSlice = createSlice({
         const exists = state.items.some((i) => i.id === created.id);
         state.items = exists ? state.items.map((i) => (i.id === created.id ? created : i)) : [...state.items, created];
       })
-      .addCase(deleteInstructor.fulfilled, (state, action) => { state.items = state.items.filter((i) => i.id !== action.payload); });
+      .addCase(deleteInstructor.fulfilled, (state, action) => {
+        state.items = state.items.map((i) => (
+          i.id === action.payload
+            ? { ...i, status: 'inactive' }
+            : i
+        ));
+      });
   },
 });
 
